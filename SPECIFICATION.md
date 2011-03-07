@@ -49,3 +49,21 @@ If server recognize application name then it allows connection and send followin
     { 'event' => 'socky:connection_established', 'id' => '<connection_id>' }
 
 Connection_id should be unique identifier of connection. It should contain from 1 to 20 alphanumeric characters encoded as string. Browser should save that id - it will be required to further identifying of connection.
+
+## Connecting to public channel
+
+Any connected browser can subscribe to public channel. In order to do so browser should send to server following hash:
+
+    { 'event' => 'socky:subscribe', 'channels' => 'desired_channel' }
+
+If browser want to subscribe to multiple channels in the same time then name of channel should be changed to array of names:
+
+    { 'event' => 'socky:subscribe', 'channels' => ['channel1', 'channel2'] }
+
+In return to such request server should join browser to channel and return:
+
+    { 'event' => 'socky_internal:subscription_successful', 'channels' => <requested_channels> }
+
+If (for any reason) server will not be able to join browser to channel then it should return:
+
+    { 'event' => 'socky_internal:subscription_unsuccessful', 'channels' => <requested_channels> }
