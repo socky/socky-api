@@ -74,9 +74,9 @@ Private channel is channel that name starts with 'private-'. So valid example wi
 
 Private channels require browser to ask client for channel authentication token. In order to do so browser should send POST request to client with following hash:
 
-    { 'event' => 'socky:subscribe', 'data' => { 'channels' => 'desired_channel', 'connection_id' => <connection_id> } }
+    { 'event' => 'socky:subscribe', 'data' => { 'channels' => 'private-desired_channel', 'connection_id' => <connection_id> } }
 
-As with public channel there is option to provide multiple channels at once.
+As with public channel there is option to provide multiple channels at once. Note that subscribing to different type of channels within one request should not be possible. If either of components detect that different types of channels are requested then that request should be aborted. Also if client receive request to authenticate public channels then it should abort request.
 
 Request url should be configurable, but should default to '/socky/auth'.
 
@@ -86,7 +86,7 @@ If more that one channel will be provided then authentication will be done for a
 
 Received authentication data should be sent to server using following hash:
 
-    { 'event' => 'socky:subscribe', 'data' => { 'channels' => 'desired_channel', 'auth' => <authentication_data> } }
+    { 'event' => 'socky:subscribe', 'data' => { 'channels' => 'private-desired_channel', 'auth' => <authentication_data> } }
 
 Server should return as in public channel.
 
