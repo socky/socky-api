@@ -16,8 +16,36 @@ Note that this split to 3 parts is used just to allow demonstrate protocol. Any 
 
 - Connection: TCP socket between browser and server
 - Application: Namespace of connections. Connections from one application can affect other connections from the same namespace, but no other connections.
-  - Application name: Unique name by which application can be identified
+  - Application name: Unique name by which application can be identified. Can contain only alphanumeric characters(case sensitive) plus dash and underscore.
 - Channel: Group of connections. Every connection can have multiple channels.
   - Public channel: Channel that anybody can join without authentication. This channel type is used at default.
   - Private channel: Channel that need authentication by client. This channel is used if channel name has prefix 'private-'
 - User: Group of connections. Every connection can have only one user.
+
+## Starting notes
+
+All data sent over WebSocket protocol should be encoded using JSON.
+
+## Connecting browser to server
+
+If browser want to connect to server then it opens WebSocket connection. Except of server host and port there should be path provided.
+
+Path is created by 2 parts: Socky backend namespace and target application name.
+
+Default Socky backend namespace should be '/websocket', but there should be possibility to change that.
+
+Example:
+
+User want to connect to example.com, port 8080, with default backend namespace and application named 'my_application'. Path will be:
+
+    ws://example.com:8080/websocket/my_application
+
+If application name will not be recognized then server should send following hash and close connection afterwards:
+
+    { 'event' => 'socky:error:unknow_application' }
+
+If server recognize application name then it allows connection and send following hash to browser:
+
+    { 'event' => 'socky:connection_established', 'id' => '<connection_id>' }
+
+Connection_id should be unique identifier of connection. It should contain from 1 to 20 alphanumeric characters encoded as string. Browser should save that id - it will be required to further identifying of connection.
