@@ -129,3 +129,7 @@ In Ruby signing will look like:
 Final auth string will look like:
 
     auth = 'somerandomstring:18f7322656afd59f69e002b717664bdb1aecd28194cdfa0cd4d90a17bf38f6f2'
+
+When asked by browser, client should return hash:
+
+    { 'auth' => 'somerandomstring:18f7322656afd59f69e002b717664bdb1aecd28194cdfa0cd4d90a17bf38f6f2' }
