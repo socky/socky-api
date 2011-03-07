@@ -67,3 +67,25 @@ In return to such request server should join browser to channel and return:
 If (for any reason) server will not be able to join browser to channel then it should return:
 
     { 'event' => 'socky_internal:subscription_unsuccessful', 'channels' => <requested_channels> }
+
+## Connecting to private channel
+
+Private channel is channel that name starts with 'private-'. So valid example will be 'private-channel' but not '_private-channel'.
+
+Private channels require browser to ask client for channel authentication token. In order to do so browser should send POST request to client with following hash:
+
+    { 'event' => 'socky:subscribe', 'channels' => 'desired_channel', 'connection_id' => <connection_id> }
+
+As with public channel there is option to provide multiple channels at once.
+
+Request url should be configurable, but should default to '/socky/auth'.
+
+If request return status other that 200 then authentication should be counted as unsuccessful. If status is equal 200 then request body should contain one string - authentication data for channel. Way of generating channel authentication data will be described later.
+
+If more that one channel will be provided then authentication will be done for all channels - if even one channel would not be authenticated then whole request should be counted as not authenticated and non-200 status should be returned. If all channels will be authenticated then still one string will be provided - authentication data for all channels at once.
+
+Received authentication data should be sent to server using following hash:
+
+    { 'event' => 'socky:subscribe', 'channels' => 'desired_channel', 'auth' => <authentication_data> }
+
+Server should return as in public channel.
