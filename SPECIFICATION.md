@@ -55,19 +55,15 @@ Connection_id should be unique identifier of connection. It should contain from 
 
 Any connected browser can subscribe to public channel. In order to do so browser should send to server following hash:
 
-    { 'event' => 'socky:subscribe', 'channels' => 'desired_channel' }
-
-If browser want to subscribe to multiple channels in the same time then name of channel should be changed to array of names:
-
-    { 'event' => 'socky:subscribe', 'channels' => ['channel1', 'channel2'] }
+    { 'event' => 'socky:subscribe', 'channel' => 'desired_channel' }
 
 In return to such request server should join browser to channel and return:
 
-    { 'event' => 'socky_internal:subscription_successful', 'channels' => <requested_channels> }
+    { 'event' => 'socky_internal:subscription_successful', 'channel' => <requested_channel> }
 
 If (for any reason) server will not be able to join browser to channel then it should return:
 
-    { 'event' => 'socky_internal:subscription_unsuccessful', 'channels' => <requested_channels> }
+    { 'event' => 'socky_internal:subscription_unsuccessful', 'channel' => <requested_channel> }
 
 ## Connecting to private channel
 
@@ -75,19 +71,15 @@ Private channel is channel that name starts with 'private-'. So valid example wi
 
 Private channels require browser to ask client for channel authentication token. In order to do so browser should send POST request to client with following hash:
 
-    { 'event' => 'socky:subscribe', 'channels' => 'private-desired_channel', 'connection_id' => <connection_id> }
-
-As with public channel there is option to provide multiple channels at once. Note that subscribing to different type of channels within one request should not be possible. If either of components detect that different types of channels are requested then that request should be aborted. Also if client receive request to authenticate public channels then it should abort request.
+    { 'event' => 'socky:subscribe', 'channel' => 'private-desired_channel', 'connection_id' => <connection_id> }
 
 Request url should be configurable, but should default to '/socky/auth'.
 
 If request return status other that 200 then authentication should be counted as unsuccessful. If status is equal 200 then request body should contain one string - authentication data for channel. Way of generating channel authentication data will be described later.
 
-If more that one channel will be provided then authentication will be done for all channels - if even one channel would not be authenticated then whole request should be counted as not authenticated and non-200 status should be returned. If all channels will be authenticated then still one string will be provided - authentication data for all channels at once.
-
 Received authentication data should be sent to server using following hash:
 
-    { 'event' => 'socky:subscribe', 'channels' => 'private-desired_channel', 'auth' => <authentication_data> }
+    { 'event' => 'socky:subscribe', 'channel' => 'private-desired_channel', 'auth' => <authentication_data> }
 
 Server should return as in public channel.
 
@@ -95,44 +87,34 @@ Server should return as in public channel.
 
 Connection process of presence channel is similar to private channel. The only addition is that browser is allowed to push his own data to client in 'data' string:
 
-    { 'event' => 'socky:subscribe', 'channels' => 'private-desired_channel', 'connection_id' => <connection_id>, 'data' => { 'some' => 'data' } }
+    { 'event' => 'socky:subscribe', 'channel' => 'presence-desired_channel', 'connection_id' => <connection_id>, 'data' => { 'some' => 'data' } }
 
 Client will return auth data and provided user data in JSON format. This data should be passed to server without further conversion:
 
-    { 'event' => 'socky:subscribe', 'channels' => 'private-desired_channel', 'auth' => <authentication_data>, 'data' => <user_data> }
+    { 'event' => 'socky:subscribe', 'channel' => 'presence-desired_channel', 'auth' => <authentication_data>, 'data' => <user_data> }
 
 If subscription is successful then subscribing browser will receive subscription confirmation and members list attached:
 
-    { 'event' => 'socky_internal:subscription_successful', 'channels' => <requested_channels>, 'members' => <member_list> }
+    { 'event' => 'socky_internal:subscription_successful', 'channel' => <requested_channel>, 'members' => <member_list> }
     
-Member list is hash where keys are connection\_ids and values are channels and user data:
+Member list is array of hashes containing connection\_ids and user data of each member:
 
-    'members' => {
-                   'first_connection_id' => { 'channels' => 'some_channel', 'data' => <user_data> },
-                   'second_connection_id' => { 'channels' => 'some_other_channels', 'data' => <user_data> }
-                 }
-
-If browser subscribe to multiple presence channels at once then members channel list will include only channels that browser are requesting to subscribe. So if one of members have channel that is not in list of requested channels the this channel will not be shown. Similarly, if subscribing browser is already on other presence channel and request new channels, then other members will not contain previously subscribed channel in channel list.
+    'members' => [
+                   { 'connection_id' => 'first_connection_id', 'data' => <user_data> },
+                   { 'connection_id' => 'second_connection_id', 'data' => <user_data> }
+                 ]
 
 Other members of presence channel should receive notification about new channel member:
 
-    { 'event' => 'socky_internal:member_added', 'connection_id' => <connection_id>, 'channels' => <channels>, 'data' => <user_data> }
-
-As with subscribed, members will see only channels that was requested - without previously subscribed channels of subscriber.
+    { 'event' => 'socky_internal:member_added', 'connection_id' => <connection_id>, 'channel' => <channel>, 'data' => <user_data> }
 
 Note that browser sending user data to client send it as hash. Client returns this data in JSON-encoded format and in that form should be pushed to server. Server decode JSON and send both subscribing browser and other browser data in hash format. This is required to preserve hash keys order both in client and server for purpose of signing request.
 
-### Example:
-
-Browser A connects to ['presence-first', 'presence-second', 'presence-third'] and browser B is connected to only ['presence-second', 'presence-third'] so it will receive:
-
-    { 'event' => 'socky_internal:member_added', 'connection_id' => <connection_id>, 'channels' => ['presence-second', 'presence-third'], 'data' => { <user_data> } }
-
 ## Disconnecting from presence channel
 
-After disconnecting from presence channel all other browser subscribed to it should receive notification about that. Notification will include channel list and connection\_id, but data should be taken from earlier received subscribe method.
+After disconnecting from presence channel all other browser subscribed to it should receive notification about that. Notification will include channel and connection\_id, but data should be taken from earlier received subscribe method.
 
-    { 'event' => 'socky_internal:member_removed', 'connection_id' => <connection_id>, 'channels' => <channels> }
+    { 'event' => 'socky_internal:member_removed', 'connection_id' => <connection_id>, 'channel' => <channel> }
 
 ## Server authentication of private and presence channel join request
 
@@ -150,17 +132,13 @@ Signature is a HMAC SHA256 hex digest. This is generated by signing the followin
 
     <salt>:<connection_id>:<channel_name>
 
-If more that one channel is provided then they should be joined using comma:
-
-    ['channel1', 'channel2', 'channel3'] => 'channel1,channel2,channel3'
-
 ### Example:
 
     salt = 'somerandomstring'
     connection_id = '1234ABCD'
-    channel_name = 'channel1,channel2,channel3'
+    channel_name = 'some_channel'
     
-    string_to_sign = 'somerandomstring:1234ABCD:channel1,channel2,channel3'
+    string_to_sign = 'somerandomstring:1234ABCD:some_channel'
 
 In Ruby signing will look like:
 
