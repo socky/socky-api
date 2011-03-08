@@ -24,7 +24,7 @@ Note that this split to 3 parts is used just to allow demonstrate protocol. Any 
 
 ## Starting notes
 
-All data sent over WebSocket protocol should be encoded using JSON.
+All data sent over WebSocket protocol should be encoded using JSON. Every JSON will be hash in root, and each action specify exactly which keys can be used. If any component find in this hash keys that are outside of specification then it should drop that key and send data without it included.
 
 ## Connecting browser to server
 
