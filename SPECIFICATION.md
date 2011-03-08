@@ -46,7 +46,7 @@ If application name will not be recognized then server should send following has
 
 If server recognize application name then it allows connection and send following hash to browser:
 
-    { 'event' => 'socky:connection_established', 'data' => { 'connection_id' => '<connection_id>' } }
+    { 'event' => 'socky:connection_established', 'connection_id' => '<connection_id>' }
 
 Connection_id should be unique identifier of connection. It should contain from 1 to 20 alphanumeric characters encoded as string. Browser should save that id - it will be required to further identifying of connection.
 
@@ -54,19 +54,19 @@ Connection_id should be unique identifier of connection. It should contain from 
 
 Any connected browser can subscribe to public channel. In order to do so browser should send to server following hash:
 
-    { 'event' => 'socky:subscribe', 'data' => { 'channels' => 'desired_channel' } }
+    { 'event' => 'socky:subscribe', 'channels' => 'desired_channel' }
 
 If browser want to subscribe to multiple channels in the same time then name of channel should be changed to array of names:
 
-    { 'event' => 'socky:subscribe', 'data' => { 'channels' => ['channel1', 'channel2'] } }
+    { 'event' => 'socky:subscribe', 'channels' => ['channel1', 'channel2'] }
 
 In return to such request server should join browser to channel and return:
 
-    { 'event' => 'socky_internal:subscription_successful', 'data' => { 'channels' => <requested_channels> } }
+    { 'event' => 'socky_internal:subscription_successful', 'channels' => <requested_channels> }
 
 If (for any reason) server will not be able to join browser to channel then it should return:
 
-    { 'event' => 'socky_internal:subscription_unsuccessful', 'data' => { 'channels' => <requested_channels> } }
+    { 'event' => 'socky_internal:subscription_unsuccessful', 'channels' => <requested_channels> }
 
 ## Connecting to private channel
 
@@ -74,7 +74,7 @@ Private channel is channel that name starts with 'private-'. So valid example wi
 
 Private channels require browser to ask client for channel authentication token. In order to do so browser should send POST request to client with following hash:
 
-    { 'event' => 'socky:subscribe', 'data' => { 'channels' => 'private-desired_channel', 'connection_id' => <connection_id> } }
+    { 'event' => 'socky:subscribe', 'channels' => 'private-desired_channel', 'connection_id' => <connection_id> }
 
 As with public channel there is option to provide multiple channels at once. Note that subscribing to different type of channels within one request should not be possible. If either of components detect that different types of channels are requested then that request should be aborted. Also if client receive request to authenticate public channels then it should abort request.
 
@@ -86,7 +86,7 @@ If more that one channel will be provided then authentication will be done for a
 
 Received authentication data should be sent to server using following hash:
 
-    { 'event' => 'socky:subscribe', 'data' => { 'channels' => 'private-desired_channel', 'auth' => <authentication_data> } }
+    { 'event' => 'socky:subscribe', 'channels' => 'private-desired_channel', 'auth' => <authentication_data> }
 
 Server should return as in public channel.
 
