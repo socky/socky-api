@@ -112,7 +112,7 @@ Member list is hash where keys are connection\_ids and values are channels and u
                    'second_connection_id' => { 'channels' => 'some_other_channels', 'data' => <user_data> }
                  }
 
-If browser subscribe to multiple presence channels at once then other subscribers channel list will include only channels that browser are requesting to subscribe. So if one of members have channel that is not in list of requested channels the this channel will not be shown. Similarly, if subscribing browser is already on other other presence channel and request new channels, then other members will not contain previously subscribed channel in channel list.
+If browser subscribe to multiple presence channels at once then members channel list will include only channels that browser are requesting to subscribe. So if one of members have channel that is not in list of requested channels the this channel will not be shown. Similarly, if subscribing browser is already on other presence channel and request new channels, then other members will not contain previously subscribed channel in channel list.
 
 Other members of presence channel should receive notification about new channel member:
 
