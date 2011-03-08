@@ -46,7 +46,7 @@ If application name will not be recognized then server should send following has
 
 If server recognize application name then it allows connection and send following hash to browser:
 
-    { 'event' => 'socky:connection_established', 'data' => { 'id' => '<connection_id>' } }
+    { 'event' => 'socky:connection_established', 'data' => { 'connection_id' => '<connection_id>' } }
 
 Connection_id should be unique identifier of connection. It should contain from 1 to 20 alphanumeric characters encoded as string. Browser should save that id - it will be required to further identifying of connection.
 
