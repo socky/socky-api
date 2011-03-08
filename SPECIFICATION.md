@@ -20,6 +20,7 @@ Note that this split to 3 parts is used just to allow demonstrate protocol. Any 
 - Channel: Group of connections. Every connection can have multiple channels.
   - Public channel: Channel that anybody can join without authentication. This channel type is used at default.
   - Private channel: Channel that need authentication by client. This channel is used if channel name has prefix 'private-'
+  - Presence channel: Channel that allow notification about joining and leaving connections. This channel require authentication and is used if channel name has prefix 'presence-'
 - User: Group of connections. Every connection can have only one user.
 
 ## Starting notes
@@ -34,7 +35,7 @@ Path is created by 2 parts: Socky backend namespace and target application name.
 
 Default Socky backend namespace should be '/websocket', but there should be possibility to change that.
 
-Example:
+### Example:
 
 User want to connect to example.com, port 8080, with default backend namespace and application named 'my_application'. Path will be:
 
@@ -90,11 +91,54 @@ Received authentication data should be sent to server using following hash:
 
 Server should return as in public channel.
 
-## Server authentication of private channel join request
+## Connecting to presence channel
 
-Server should implement generator of channel authentication data - the same as in client. Upon receiving subscribe request to private channel it should generate authentication data and check if it match received one - if yes then it should join browser to channel and return 'subscription\_successful' event. Otherwise it should return 'subscription\_unsuccessful' event.
+Connection process of presence channel is similar to private channel. The only addition is that browser is allowed to push his own data to client in 'data' string:
 
-## Generating channel authentication data
+    { 'event' => 'socky:subscribe', 'channels' => 'private-desired_channel', 'connection_id' => <connection_id>, 'data' => { 'some' => 'data' } }
+
+Client will return auth data and provided user data in JSON format. This data should be passed to server without further conversion:
+
+    { 'event' => 'socky:subscribe', 'channels' => 'private-desired_channel', 'auth' => <authentication_data>, 'data' => <user_data> }
+
+If subscription is successful then subscribing browser will receive subscription confirmation and members list attached:
+
+    { 'event' => 'socky_internal:subscription_successful', 'channels' => <requested_channels>, 'members' => <member_list> }
+    
+Member list is hash where keys are connection\_ids and values are channels and user data:
+
+    'members' => {
+                   'first_connection_id' => { 'channels' => 'some_channel', 'data' => <user_data> },
+                   'second_connection_id' => { 'channels' => 'some_other_channels', 'data' => <user_data> }
+                 }
+
+If browser subscribe to multiple presence channels at once then other subscribers channel list will include only channels that browser are requesting to subscribe. So if one of members have channel that is not in list of requested channels the this channel will not be shown. Similarly, if subscribing browser is already on other other presence channel and request new channels, then other members will not contain previously subscribed channel in channel list.
+
+Other members of presence channel should receive notification about new channel member:
+
+    { 'event' => 'socky_internal:member_added', 'connection_id' => <connection_id>, 'channels' => <channels>, 'data' => <user_data> }
+
+As with subscribed, members will see only channels that was requested - without previously subscribed channels of subscriber.
+
+Note that browser sending user data to client send it as hash. Client returns this data in JSON-encoded format and in that form should be pushed to server. Server decode JSON and send both subscribing browser and other browser data in hash format. This is required to preserve hash keys order both in client and server for purpose of signing request.
+
+### Example:
+
+Browser A connects to ['presence-first', 'presence-second', 'presence-third'] and browser B is connected to only ['presence-second', 'presence-third'] so it will receive:
+
+    { 'event' => 'socky_internal:member_added', 'connection_id' => <connection_id>, 'channels' => ['presence-second', 'presence-third'], 'data' => { <user_data> } }
+
+## Disconnecting from presence channel
+
+After disconnecting from presence channel all other browser subscribed to it should receive notification about that. Notification will include channel list and connection\_id, but data should be taken from earlier received subscribe method.
+
+    { 'event' => 'socky_internal:member_removed', 'connection_id' => <connection_id>, 'channels' => <channels> }
+
+## Server authentication of private and presence channel join request
+
+Server should implement generator of channel authentication data - the same as in client. Upon receiving subscribe request to private or presence channel it should generate authentication data and check if it match received one - if yes then it should join browser to channel and return 'subscription\_successful' event. Otherwise it should return 'subscription\_unsuccessful' event.
+
+## Generating channel authentication data for private channels
 
 Authentication data should look like
 
@@ -110,7 +154,7 @@ If more that one channel is provided then they should be joined using comma:
 
     ['channel1', 'channel2', 'channel3'] => 'channel1,channel2,channel3'
 
-Example:
+### Example:
 
     salt = 'somerandomstring'
     connection_id = '1234ABCD'
@@ -130,6 +174,24 @@ Final auth string will look like:
 
     auth = 'somerandomstring:18f7322656afd59f69e002b717664bdb1aecd28194cdfa0cd4d90a17bf38f6f2'
 
-When asked by browser, client should return hash:
+When asked by browser, client should return JSON-encoded hash:
 
     { 'auth' => 'somerandomstring:18f7322656afd59f69e002b717664bdb1aecd28194cdfa0cd4d90a17bf38f6f2' }
+
+## Generating channel authentication data for private channels
+
+Generating auth data for private channels is similar to private channels, with following exceptions:
+
+Browser is allowed to send additional 'data' parameter and it should be remembered in JSON-encoded form.
+
+    user_data = JSON.generate( request['data'] )
+
+This data should be included in string\_to\_sign:
+
+    string_to_sign = '<salt>:<connection_id>:<channel_name>:<user_data>'
+
+When asked by browser, client should return JSON-encoded hash:
+
+    { 'auth' => '<salt>:<signature>', 'data' => '<user_data>' }
+
+Note that in final string user\_data will be JSON-encoded two times.
