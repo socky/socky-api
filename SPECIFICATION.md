@@ -47,7 +47,7 @@ If application name will not be recognized by Server then it should send followi
 
 If Server recognize application name then it allows connection and send following hash to WS-Client:
 
-    { 'event' => 'socky:connection_established', 'connection_id' => '<connection_id>' }
+    { 'event' => 'socky:connection:established', 'connection_id' => '<connection_id>' }
 
 Connection_id should be unique identifier of connection. It should contain from 1 to 20 characters, including only letters, numbers, dash and underscore. WS-Client should save that id - it will be required to further identifying of connection.
 
@@ -69,11 +69,11 @@ Any connected WS-Client can subscribe to public channel. In order to do so WS-Cl
 
 In return to such request Server should join WS-Client to channel and return:
 
-    { 'event' => 'socky_internal:subscription_successful', 'channel' => <requested_channel> }
+    { 'event' => 'socky_internal:subscription:success', 'channel' => <requested_channel> }
 
 If (for any reason) Server will not be able to join WS-Client to channel then it should return:
 
-    { 'event' => 'socky_internal:subscription_unsuccessful', 'channel' => <requested_channel> }
+    { 'event' => 'socky_internal:subscription:failure', 'channel' => <requested_channel> }
 
 ## Subscribing to private channel:
 
@@ -105,7 +105,7 @@ Authenticator will return auth data and provided user data in JSON format. This 
 
 If subscription is successful then subscribing WS-Client will receive subscription confirmation and members list attached:
 
-    { 'event' => 'socky_internal:subscription_successful', 'channel' => <requested_channel>, 'members' => <member_list> }
+    { 'event' => 'socky_internal:subscription:success', 'channel' => <requested_channel>, 'members' => <member_list> }
     
 Member list is array of hashes containing connection\_ids and user data of each member:
 
@@ -116,7 +116,7 @@ Member list is array of hashes containing connection\_ids and user data of each 
 
 Other members of presence channel should receive notification about new channel member:
 
-    { 'event' => 'socky_internal:member_added', 'connection_id' => <connection_id>, 'channel' => <channel>, 'data' => <user_data> }
+    { 'event' => 'socky_internal:member:added', 'connection_id' => <connection_id>, 'channel' => <channel>, 'data' => <user_data> }
 
 Note that WS-Client sending user data to Authenticator send it as hash. Authenticator returns this data in JSON-encoded format and in that form should be pushed to Server. Server decode JSON and send both subscribing WS-Client and other WS-Clients data in hash format. This is required to preserve hash keys order both in Authenticator and Server for purpose of signing request.
 
@@ -134,7 +134,7 @@ In return it will receive from Server:
 
 Unsubscribing from presence channel looks like public and private channel, but after unsubscribing all other WS-Clients subscribed to it should receive notification about that. Notification will include channel and connection\_id, but data should be taken from earlier received subscribe method.
 
-    { 'event' => 'socky_internal:member_removed', 'connection_id' => <connection_id>, 'channel' => <channel> }
+    { 'event' => 'socky_internal:member:removed', 'connection_id' => <connection_id>, 'channel' => <channel> }
 
 Note that if WS-Client will disconnect from server then all channels should receive unsubscribe notification.
 
