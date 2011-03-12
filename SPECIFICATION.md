@@ -120,9 +120,19 @@ Other members of presence channel should receive notification about new channel 
 
 Note that WS-Client sending user data to Authenticator send it as hash. Authenticator returns this data in JSON-encoded format and in that form should be pushed to Server. Server decode JSON and send both subscribing WS-Client and other WS-Clients data in hash format. This is required to preserve hash keys order both in Authenticator and Server for purpose of signing request.
 
+## Unsubscribing from public and private channel:
+
+To unsubscribe from public or private channel WS-Client need to send:
+
+    { 'event' => 'socky:unsubscribe', 'channel' => 'desired_channel' }
+
+In return it will receive from Server:
+
+    { 'event' => 'socky_internal:unsubscribe:success', 'channel' => <requested_channel> }
+
 ## Unsubscribing from presence channel:
 
-After unsubscribing from presence channel all other WS-Clients subscribed to it should receive notification about that. Notification will include channel and connection\_id, but data should be taken from earlier received subscribe method.
+Unsubscribing from presence channel looks like public and private channel, but after unsubscribing all other WS-Clients subscribed to it should receive notification about that. Notification will include channel and connection\_id, but data should be taken from earlier received subscribe method.
 
     { 'event' => 'socky_internal:member_removed', 'connection_id' => <connection_id>, 'channel' => <channel> }
 
