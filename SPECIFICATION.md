@@ -69,11 +69,11 @@ Any connected WS-Client can subscribe to public channel. In order to do so WS-Cl
 
 In return to such request Server should join WS-Client to channel and return:
 
-    { 'event' => 'socky_internal:subscription:success', 'channel' => <requested_channel> }
+    { 'event' => 'socky_internal:subscribe:success', 'channel' => <requested_channel> }
 
 If (for any reason) Server will not be able to join WS-Client to channel then it should return:
 
-    { 'event' => 'socky_internal:subscription:failure', 'channel' => <requested_channel> }
+    { 'event' => 'socky_internal:subscribe:failure', 'channel' => <requested_channel> }
 
 ## Subscribing to private channel:
 
@@ -105,7 +105,7 @@ Authenticator will return auth data and provided user data in JSON format. This 
 
 If subscription is successful then subscribing WS-Client will receive subscription confirmation and members list attached:
 
-    { 'event' => 'socky_internal:subscription:success', 'channel' => <requested_channel>, 'members' => <member_list> }
+    { 'event' => 'socky_internal:subscribe:success', 'channel' => <requested_channel>, 'members' => <member_list> }
     
 Member list is array of hashes containing connection\_ids and user data of each member:
 
