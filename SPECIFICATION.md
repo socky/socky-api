@@ -130,6 +130,10 @@ In return it will receive from Server:
 
     { 'event' => 'socky_internal:unsubscribe:success', 'channel' => <requested_channel> }
 
+If unsubscribing was unsuccessful(i.e. wrong channel name or user wasn't connected to this channel) then Server should return:
+
+    { 'event' => 'socky_internal:unsubscribe:failure', 'channel' => <requested_channel> }
+
 ## Unsubscribing from presence channel:
 
 Unsubscribing from presence channel looks like public and private channel, but after unsubscribing all other WS-Clients subscribed to it should receive notification about that. Notification will include channel and connection\_id, but data should be taken from earlier received subscribe method.
