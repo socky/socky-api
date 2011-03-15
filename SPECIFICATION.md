@@ -8,7 +8,7 @@ Socky specification defines 3 components:
 
 - Server: main core waiting for connections from clients. Base impementation(in Ruby) will be handled [here](http://github.com/socky/socky-server-ruby).
 - WebSocket Client: component allowing client to connect to Server. Base implementation(in JavaScript) will be handled [here](http://github.com/socky/socky-js). From here it will be called "WS-Client".
-- Authentication Module: component allowing authenticate Client rights to connect to Server. Base implementation(in Ruby) will be handled [here](http://github.com/socky/socky-client-ruby). From here it will be called "Authenticator".
+- Authentication Module: component allowing authenticate Client rights to connect to Server. Base implementation(in Ruby) will be handled [here](http://github.com/socky/socky-authenticator-ruby). From here it will be called "Authenticator".
 
 Note that this split to 3 parts is used just to allow demonstrate protocol. Any part can be written in any language and, unless it create security risk, merged in one module.
 
