@@ -23,7 +23,7 @@ Note that this split to 3 parts is used just to allow demonstrate protocol. Any 
 
 All Socky components, if not merged together, should connect using JSON-encoded hashes. What it mean is that every component upon receiving data should decode it and threat as hash. If data type is not hash then such request should be ignored. In addition to this each part of specification allows for number of keys. If key is not mentioned in concrete part of specification then it should be ignored and not parsed or stored.
 
-Communication between WS-Client and Server should use WebSocket protocol. Communication between WS-Client and Authenticator or Server and Authenticator(if it's not built in) should use POST HTTP requests.
+Communication between WS-Client and Server should use WebSocket protocol. Communication between WS-Client and Authenticator or Server and Authenticator(if it's not built in) should use HTTP requests.
 
 Internal communication of merged modules will not be specified in this document, so can be implemented at the discretion of the programmer.
 
