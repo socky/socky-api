@@ -6,7 +6,7 @@ This is draft for protocol of communication between Socky elements. It's open fo
 
 Socky specification defines 3 components:
 
-- Server: main core waiting for connections from clients. Base impementation(in Ruby) will be handled [here](http://github.com/socky/socky-server-ruby).
+- Server: main core waiting for connections from clients. Base implementation(in Ruby) will be handled [here](http://github.com/socky/socky-server-ruby).
 - WebSocket Client: component allowing client to connect to Server. Base implementation(in JavaScript) will be handled [here](http://github.com/socky/socky-js). From here it will be called "WS-Client".
 - Authentication Module: component allowing authenticate Client rights to connect to Server. Base implementation(in Ruby) will be handled [here](http://github.com/socky/socky-authenticator-ruby). From here it will be called "Authenticator".
 
@@ -238,3 +238,17 @@ When asked by WS-Client, Authenticator should return JSON-encoded hash:
     { 'auth' => '<salt>:<signature>', 'data' => '<user_data>' }
 
 Note that in final string user\_data will be JSON-encoded two times.
+
+## Sending data to other WS-Clients
+
+Every WS-Client with 'write' right can send event to channel, and it will be propagated to other clients. To do so WS-Client need to send following request to server:
+
+    { 'event' => 'some_event', 'channel' => 'private-channel' }
+
+This will trigger 'some_event' event for all other clients on this channel. Note, that currently only sending to private and presence channels is supported, as public channels aren't validated. Also, event should not be sent to clients with 'read' right set to false.
+
+Event name can be anything from 1 to 30 characters. The only restriction for event naming is that user should not be allowed to send events starting from "socky:" and "socky_internal:" - both prefixes are reserved for internal methods. If client or server receive event that have such prefix and it's not described in this document then this event should not be propagated. Otherwise it should be sent to every WS-Client connected to channel.
+
+In addition to mentioned earlier 'event' and 'channel' keys client should be able to provide 'data' for other users. This data should be sent to other clients without any conversion.
+
+    { 'event' => 'some_event', 'channel' => 'private-channel', 'data' => { 'some' => 'data' } }
