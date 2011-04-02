@@ -10,7 +10,7 @@ Called when client connect to server
 
 - connection_id: unique id of user
 
-## socky:connection:broken
+## socky:connection:closed
 
 Called when client disconnect from server. After this callback client should reconnect automaticaly. This callback is received only if connection was established earlier.
 
