@@ -43,11 +43,11 @@ WS-Client want to connect to example.com, port 8080, with default backend namesp
 
 If application name will not be recognized by Server then it should send following hash and close connection afterwards:
 
-    { 'event' => 'socky:error:unknow_application' }
+    { event: 'socky:error:unknow_application' }
 
 If Server recognize application name then it allows connection and send following hash to WS-Client:
 
-    { 'event' => 'socky:connection:established', 'connection_id' => '<connection_id>' }
+    { event: 'socky:connection:established', connection_id: '<connection_id>' }
 
 Connection_id should be unique identifier of connection. It should contain from 1 to 20 characters, including only letters, numbers, dash and underscore. WS-Client should save that id - it will be required to further identifying of connection.
 
@@ -65,15 +65,15 @@ Each channel name can contain from 1 to 30 characters, including only letters, n
 
 Any connected WS-Client can subscribe to public channel. In order to do so WS-Client should send the following hash to Server:
 
-    { 'event' => 'socky:subscribe', 'channel' => 'desired_channel' }
+    { event: 'socky:subscribe', channel: 'desired_channel' }
 
 In return to such request Server should join WS-Client to channel and return:
 
-    { 'event' => 'socky_internal:subscribe:success', 'channel' => <requested_channel> }
+    { event: 'socky_internal:subscribe:success', channel: <requested_channel> }
 
 If (for any reason) Server will not be able to join WS-Client to channel then it should return:
 
-    { 'event' => 'socky_internal:subscribe:failure', 'channel' => <requested_channel> }
+    { event: 'socky_internal:subscribe:failure', channel: <requested_channel> }
 
 ## Subscribing to private channel:
 
@@ -81,7 +81,7 @@ Private channel is channel that name starts with 'private-'. So valid example wi
 
 Private channels require WS-Client to ask Authenticator for channel authentication token. In order to do so WS-Client should send POST request to Authenticator with following hash:
 
-    { 'event' => 'socky:subscribe', 'channel' => 'private-desired_channel', 'connection_id' => <connection_id> }
+    { event: 'socky:subscribe', channel: 'private-desired_channel', connection_id: <connection_id> }
 
 Request url should be configurable, but should default to '/socky/auth'.
 
@@ -89,7 +89,7 @@ If request return status other that 200 then authentication should be counted as
 
 Received authentication data should be sent by WS-Client to Server using following hash:
 
-    { 'event' => 'socky:subscribe', 'channel' => 'private-desired_channel', 'auth' => <authentication_token> }
+    { event: 'socky:subscribe', channel: 'private-desired_channel', auth: <authentication_token> }
 
 Server should return as in public channel.
 
@@ -97,26 +97,26 @@ Server should return as in public channel.
 
 Connection process of presence channel is similar to private channel. The only addition is that WS-Client is allowed to push his own data to client in 'data' string:
 
-    { 'event' => 'socky:subscribe', 'channel' => 'presence-desired_channel', 'connection_id' => <connection_id>, 'data' => { 'some' => 'data' } }
+    { event: 'socky:subscribe', channel: 'presence-desired_channel', connection_id: <connection_id>, data: { some: 'data' } }
 
 Authenticator will return auth data and provided user data in JSON format. This data should be passed to Server without further conversion:
 
-    { 'event' => 'socky:subscribe', 'channel' => 'presence-desired_channel', 'auth' => <authentication_data>, 'data' => <user_data> }
+    { event: 'socky:subscribe', channel: 'presence-desired_channel', auth: <authentication_data>, data: <user_data> }
 
 If subscription is successful then subscribing WS-Client will receive subscription confirmation and members list attached:
 
-    { 'event' => 'socky_internal:subscribe:success', 'channel' => <requested_channel>, 'members' => <member_list> }
+    { event: 'socky_internal:subscribe:success', channel: <requested_channel>, members: <member_list> }
     
 Member list is array of hashes containing connection\_ids and user data of each member:
 
     'members' => [
-                   { 'connection_id' => 'first_connection_id', 'data' => <user_data> },
-                   { 'connection_id' => 'second_connection_id', 'data' => <user_data> }
+                   { connection_id: 'first_connection_id', data: <user_data> },
+                   { connection_id: 'second_connection_id', data: <user_data> }
                  ]
 
 Other members of presence channel should receive notification about new channel member:
 
-    { 'event' => 'socky_internal:member:added', 'connection_id' => <connection_id>, 'channel' => <channel>, 'data' => <user_data> }
+    { event: 'socky_internal:member:added', connection_id: <connection_id>, channel: <channel>, data: <user_data> }
 
 Note that WS-Client sending user data to Authenticator send it as hash. Authenticator returns this data in JSON-encoded format and in that form should be pushed to Server. Server decode JSON and send both subscribing WS-Client and other WS-Clients data in hash format. This is required to preserve hash keys order both in Authenticator and Server for purpose of signing request.
 
@@ -124,21 +124,21 @@ Note that WS-Client sending user data to Authenticator send it as hash. Authenti
 
 To unsubscribe from public or private channel WS-Client need to send:
 
-    { 'event' => 'socky:unsubscribe', 'channel' => 'desired_channel' }
+    { event: 'socky:unsubscribe', channel: 'desired_channel' }
 
 In return it will receive from Server:
 
-    { 'event' => 'socky_internal:unsubscribe:success', 'channel' => <requested_channel> }
+    { event: 'socky_internal:unsubscribe:success', channel: <requested_channel> }
 
 If unsubscribing was unsuccessful(i.e. wrong channel name or user wasn't connected to this channel) then Server should return:
 
-    { 'event' => 'socky_internal:unsubscribe:failure', 'channel' => <requested_channel> }
+    { event: 'socky_internal:unsubscribe:failure', channel: <requested_channel> }
 
 ## Unsubscribing from presence channel:
 
 Unsubscribing from presence channel looks like public and private channel, but after unsubscribing all other WS-Clients subscribed to it should receive notification about that. Notification will include channel and connection\_id, but data should be taken from earlier received subscribe method.
 
-    { 'event' => 'socky_internal:member:removed', 'connection_id' => <connection_id>, 'channel' => <channel> }
+    { event: 'socky_internal:member:removed', connection_id: <connection_id>, channel: <channel> }
 
 Note that if WS-Client will disconnect from server then all channels should receive unsubscribe notification.
 
@@ -160,13 +160,13 @@ This 3 rights allow greater control over channel. I.e. let's assume that someone
 
 If WS-Client want to subscribe as read/write to private-channel it will send to Authenticator:
 
-    { 'event' => 'socky:subscribe', 'channel' => 'private-desired_channel', 'connection_id' => <connection_id>, 'write' => true }
+    { event: 'socky:subscribe', channel: 'private-desired_channel', connection_id: <connection_id>, write: true }
 
 Note that 'true' is not string 'true' but boolean value true.
 
 After receiving authentication token WS-Client will send to Server:
 
-    { 'event' => 'socky:subscribe', 'channel' => 'presence-desired_channel', 'auth' => <authentication_data>, 'write' => true }
+    { event: 'socky:subscribe', channel: 'presence-desired_channel', auth: <authentication_data>, write: true }
 
 For obvious reason only presence-channel should accept right 'hide' - private channel should just ignore it.
 
@@ -192,7 +192,7 @@ Signature is a HMAC SHA256 hex digest. This is generated by signing the followin
 
 Note that rights should be converted to 0-1 format with order 'read','write','hide'. So rights
 
-    { 'read' => true, 'write' => false, 'hide' => false }
+    { read: true, write: false, hide: false }
 
 will look like '100'. In private channel 'hide' will always be false, but it should still be included as '0'. Please remember that default value is '100' and params not provided will have this value.
 
@@ -219,7 +219,7 @@ Final auth string will look like:
 
 When asked by WS-Client, Authenticator should return JSON-encoded hash:
 
-    { 'auth' => 'somerandomstring:ebb032a2b6814f305571cf08a212cde14d21abc1a3076a257223e808c675b579' }
+    { auth: 'somerandomstring:ebb032a2b6814f305571cf08a212cde14d21abc1a3076a257223e808c675b579' }
 
 ## Generating channel authentication data for presence channels:
 
@@ -235,7 +235,7 @@ This data should be included in string\_to\_sign:
 
 When asked by WS-Client, Authenticator should return JSON-encoded hash:
 
-    { 'auth' => '<salt>:<signature>', 'data' => '<user_data>' }
+    { auth: '<salt>:<signature>', data: '<user_data>' }
 
 Note that in final string user\_data will be JSON-encoded two times.
 
@@ -243,12 +243,12 @@ Note that in final string user\_data will be JSON-encoded two times.
 
 Every WS-Client with 'write' right can send event to channel, and it will be propagated to other clients. To do so WS-Client need to send following request to server:
 
-    { 'event' => 'some_event', 'channel' => 'private-channel' }
+    { event: 'some_event', channel: 'private-channel' }
 
 This will trigger 'some_event' event for all other clients on this channel. Note, that currently only sending to private and presence channels is supported, as public channels aren't validated. Also, event should not be sent to clients with 'read' right set to false.
 
 Event name can be anything from 1 to 30 characters. The only restriction for event naming is that user should not be allowed to send events starting from "socky:" and "socky_internal:" - both prefixes are reserved for internal methods. If client or server receive event that have such prefix and it's not described in this document then this event should not be propagated. Otherwise it should be sent to every WS-Client connected to channel.
 
-In addition to mentioned earlier 'event' and 'channel' keys client should be able to provide 'data' for other users. This data should be sent to other clients without any conversion.
+In addition to mentioned earlier 'event' and 'channel' keys client should be able to provide 'data' for other users. This data should be hash and should be sent to other clients without any conversion.
 
-    { 'event' => 'some_event', 'channel' => 'private-channel', 'data' => { 'some' => 'data' } }
+    { event: 'some_event', channel: 'private-channel', data: { some: 'data' } }
