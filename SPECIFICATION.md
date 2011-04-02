@@ -79,7 +79,7 @@ If (for any reason) Server will not be able to join WS-Client to channel then it
 
 Private channel is channel that name starts with 'private-'. So valid example will be 'private-channel' but not '_private-channel'.
 
-Private channels require WS-Client to ask Authenticator for channel authentication token. In order to do so WS-Client should send POST request to Authenticator with following hash:
+Private channels require WS-Client to ask Authenticator for channel authentication token. In order to do so WS-Client should send HTTP request to Authenticator with following hash in 'payload' parameter:
 
     { event: 'socky:subscribe', channel: 'private-desired_channel', connection_id: <connection_id> }
 
