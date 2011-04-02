@@ -69,11 +69,11 @@ Any connected WS-Client can subscribe to public channel. In order to do so WS-Cl
 
 In return to such request Server should join WS-Client to channel and return:
 
-    { event: 'socky_internal:subscribe:success', channel: <requested_channel> }
+    { event: 'socky:subscribe:success', channel: <requested_channel> }
 
 If (for any reason) Server will not be able to join WS-Client to channel then it should return:
 
-    { event: 'socky_internal:subscribe:failure', channel: <requested_channel> }
+    { event: 'socky:subscribe:failure', channel: <requested_channel> }
 
 ## Subscribing to private channel:
 
@@ -106,7 +106,7 @@ Authenticator will return auth data and provided user data in JSON format. This 
 If subscription is successful then subscribing WS-Client will receive subscription confirmation and members list attached:
 
     { event: 'socky_internal:subscribe:success', channel: <requested_channel>, members: <member_list> }
-    
+
 Member list is array of hashes containing connection\_ids and user data of each member:
 
     'members' => [
@@ -116,7 +116,7 @@ Member list is array of hashes containing connection\_ids and user data of each 
 
 Other members of presence channel should receive notification about new channel member:
 
-    { event: 'socky_internal:member:added', connection_id: <connection_id>, channel: <channel>, data: <user_data> }
+    { event: 'socky:member:added', connection_id: <connection_id>, channel: <channel>, data: <user_data> }
 
 Note that WS-Client sending user data to Authenticator send it as hash. Authenticator returns this data in JSON-encoded format and in that form should be pushed to Server. Server decode JSON and send both subscribing WS-Client and other WS-Clients data in hash format. This is required to preserve hash keys order both in Authenticator and Server for purpose of signing request.
 
@@ -128,17 +128,17 @@ To unsubscribe from public or private channel WS-Client need to send:
 
 In return it will receive from Server:
 
-    { event: 'socky_internal:unsubscribe:success', channel: <requested_channel> }
+    { event: 'socky:unsubscribe:success', channel: <requested_channel> }
 
 If unsubscribing was unsuccessful(i.e. wrong channel name or user wasn't connected to this channel) then Server should return:
 
-    { event: 'socky_internal:unsubscribe:failure', channel: <requested_channel> }
+    { event: 'socky:unsubscribe:failure', channel: <requested_channel> }
 
 ## Unsubscribing from presence channel:
 
 Unsubscribing from presence channel looks like public and private channel, but after unsubscribing all other WS-Clients subscribed to it should receive notification about that. Notification will include channel and connection\_id, but data should be taken from earlier received subscribe method.
 
-    { event: 'socky_internal:member:removed', connection_id: <connection_id>, channel: <channel> }
+    { event: 'socky:member:removed', connection_id: <connection_id>, channel: <channel> }
 
 Note that if WS-Client will disconnect from server then all channels should receive unsubscribe notification.
 
@@ -202,13 +202,13 @@ will look like '100'. In private channel 'hide' will always be false, but it sho
     connection_id = '1234ABCD'
     channel_name = 'some_channel'
     write = true
-    
+
     string_to_sign = 'somerandomstring:1234ABCD:some_channel:110'
 
 In Ruby signing will look like:
 
     require 'hmac-sha2'
-    
+
     secret = 'application_secret_key'
     signature = HMAC::SHA256.hexdigest(secret, string_to_sign)
     # => 'ebb032a2b6814f305571cf08a212cde14d21abc1a3076a257223e808c675b579'
@@ -247,7 +247,7 @@ Every WS-Client with 'write' right can send event to channel, and it will be pro
 
 This will trigger 'some_event' event for all other clients on this channel. Note, that currently only sending to private and presence channels is supported, as public channels aren't validated. Also, event should not be sent to clients with 'read' right set to false.
 
-Event name can be anything from 1 to 30 characters. The only restriction for event naming is that user should not be allowed to send events starting from "socky:" and "socky_internal:" - both prefixes are reserved for internal methods. If client or server receive event that have such prefix and it's not described in this document then this event should not be propagated. Otherwise it should be sent to every WS-Client connected to channel.
+Event name can be anything from 1 to 30 characters. The only restriction for event naming is that user should not be allowed to send events starting with "socky:", which is reserved for internal methods. If client or server receive event that have such prefix and it's not described in this document then this event should not be propagated. Otherwise it should be sent to every WS-Client connected to channel.
 
 In addition to mentioned earlier 'event' and 'channel' keys client should be able to provide 'data' for other users. This data should be hash and should be sent to other clients without any conversion.
 
