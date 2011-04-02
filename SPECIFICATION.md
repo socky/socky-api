@@ -43,7 +43,7 @@ WS-Client want to connect to example.com, port 8080, with default backend namesp
 
 If application name will not be recognized by Server then it should send following hash and close connection afterwards:
 
-    { event: 'socky:error:unknow_application' }
+    { event: 'socky:connection:error', reason: 'refused' }
 
 If Server recognize application name then it allows connection and send following hash to WS-Client:
 
