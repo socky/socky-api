@@ -1,4 +1,4 @@
-# Socky API v0.5.0
+# Socky API v0.5
 
 This is draft for protocol of communication between Socky elements. It's open for discussion so please write every proposition under this message - this will be discussed and final version will be posted on github repository.
 
