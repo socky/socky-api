@@ -8,9 +8,10 @@ Socky specification defines 3 components:
 
 - Server: main core waiting for connections from clients. Base implementation(in Ruby) will be handled [here](http://github.com/socky/socky-server-ruby).
 - WebSocket Client: component allowing client to connect to Server. Base implementation(in JavaScript) will be handled [here](http://github.com/socky/socky-js). From here it will be called "WS-Client".
+- HTTP Client: component allowing sending messages to Server without remaining connected. Base implementation(in Ruby) will be handled [here](http://github.com/socky/socky-client-ruby). From here it will be called "HTTP-Client".
 - Authentication Module: component allowing authenticate Client rights to connect to Server. Base implementation(in Ruby) will be handled [here](http://github.com/socky/socky-authenticator-ruby). From here it will be called "Authenticator".
 
-Note that this split to 3 parts is used just to allow demonstrate protocol. Any part can be written in any language and, unless it create security risk, merged in one module.
+Note that this split to 4 parts is used just to allow demonstrate protocol. Any part can be written in any language and, unless it create security risk, merged in one module.
 
 ## Additional naming:
 
@@ -79,7 +80,7 @@ If (for any reason) Server will not be able to join WS-Client to channel then it
 
 Private channel is channel that name starts with 'private-'. So valid example will be 'private-channel' but not '_private-channel'.
 
-Private channels require WS-Client to ask Authenticator for channel authentication token. In order to do so WS-Client should send HTTP request to Authenticator with following hash in 'payload' parameter:
+Private channels require WS-Client to ask Authenticator for channel authentication token. In order to do so WS-Client should send HTTP request to Authenticator with following variables as HTTP parameters:
 
     { event: 'socky:subscribe', channel: 'private-desired_channel', connection_id: <connection_id> }
 
@@ -109,10 +110,10 @@ If subscription is successful then subscribing WS-Client will receive subscripti
 
 Member list is array of hashes containing connection\_ids and user data of each member:
 
-    'members' => [
-                   { connection_id: 'first_connection_id', data: <user_data> },
-                   { connection_id: 'second_connection_id', data: <user_data> }
-                 ]
+    'members': [
+                 { connection_id: 'first_connection_id', data: <user_data> },
+                 { connection_id: 'second_connection_id', data: <user_data> }
+               ]
 
 Other members of presence channel should receive notification about new channel member:
 
@@ -154,15 +155,13 @@ Parameters that are not changed from default should be skipped for preserve of b
 
 ### Explanation:
 
-This 3 rights allow greater control over channel. I.e. let's assume that someone want to implement clone of Skype. WS-Client should be able to both read and write to channel(chat with one specified person). So he will have rights { 'read' => true, 'write' => true }. Note that 'read' option can be skipped as it is at default. Now let's assume channel with contact list. This will be presence-channel. Some users want status "invisible" - you can see others, but they can't see you. This will be { 'read' => true, 'hide' => true }. Global notification system will be { 'read' => false, 'write' => true } - it will send messages to all, but it don't need to receive any.
+This 3 rights allow greater control over channel. I.e. let's assume that someone want to implement clone of Skype. WS-Client should be able to both read and write to channel(chat with one specified person). So he will have rights { read: true, write: true }. Note that 'read' option can be skipped as it is at default. Now let's assume channel with contact list. This will be presence-channel. Some users want status "invisible" - you can see others, but they can't see you. This will be { read: true, hide: true }. Global notification system will be { read: false, write: true } - it will send messages to all, but it don't need to receive any.
 
 ### Example:
 
 If WS-Client want to subscribe as read/write to private-channel it will send to Authenticator:
 
-    { event: 'socky:subscribe', channel: 'private-desired_channel', connection_id: <connection_id>, write: true }
-
-Note that 'true' is not string 'true' but boolean value true.
+    http://example.org/socky/auth?event=socky:subscribe&channel=private-desired_channel&connection_id=<connection_id>&write=true
 
 After receiving authentication token WS-Client will send to Server:
 
