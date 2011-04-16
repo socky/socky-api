@@ -195,6 +195,8 @@ Note that rights should be converted to 0-1 format with order 'read','write','hi
 
 will look like '100'. In private channel 'hide' will always be false, but it should still be included as '0'. Please remember that default value is '100' and params not provided will have this value.
 
+In addition to that client can send 'data' param. For WS-Client this param will be used only for presence channel, but HTTP-Client can provide it for any kind of channel. For details about this parameter please see next paragraph.
+
 ### Example:
 
     salt = 'somerandomstring'
@@ -236,7 +238,7 @@ When asked by WS-Client, Authenticator should return JSON-encoded hash:
 
     { auth: '<salt>:<signature>', data: '<user_data>' }
 
-Note that in final string user\_data will be JSON-encoded two times.
+Note that in final string user\_data will be JSON-encoded two times. If 'data' parameter is not provided by client then it should not be included in string\_to\_sign or final auth response.
 
 ## Sending data to other WS-Clients
 
